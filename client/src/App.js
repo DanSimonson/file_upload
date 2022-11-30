@@ -2,24 +2,42 @@ import React, { useState, useEffect } from "react";
 // import FileUpload from "./components/FileUpload";
 import axios from "axios";
 import "./App.css";
+import styled from "styled-components";
+
+const Wrapper = styled.div`
+  display: flex;
+  justify-content: center
+  align-items: center
+  min-height: 100vh;
+`;
 
 const App = () => {
+  const [data, setData] = useState([]);
+
   useEffect(() => {
     callBackendAPI();
   }, []);
 
   const callBackendAPI = async () => {
-    const res = await axios("/express_backend");
-    console.log("res: ", res);
-    // const response = await fetch("/express_backend");
-    // const body = await response.json();
-
-    // if (response.status !== 200) {
-    //   throw Error(body.message);
-    // }
-    // return body;
+    let temp = [];
+    try {
+      const res = await axios("/express_backend");
+      temp.push(res.data);
+      setData(temp);
+    } catch (err) {
+      console.log("err.message: ", err.message);
+    }
   };
-  return <h1>frontend</h1>;
+
+  return (
+    <div>
+      {data.map((item, idx) => (
+        <Wrapper key={idx}>
+          <h2>{item.message}</h2>
+        </Wrapper>
+      ))}
+    </div>
+  );
 };
 
 export default App;
