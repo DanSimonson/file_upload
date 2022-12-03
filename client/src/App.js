@@ -61,8 +61,6 @@ const App = () => {
         let dataSht = new Uint8Array(fileReader.result);
         let wb = XLSX.read(dataSht, { type: "array" });
         let ws = wb.SheetNames[0];
-        console.log('ws: ', ws);
-        //"Sheet1"
         let htmlStr = XLSX.write(wb, {
           sheet: `${ws}`,
           type: "binary",
