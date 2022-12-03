@@ -1,3 +1,25 @@
 input#myfile {
   background-color: red;
 }
+#wrapper{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 5rem;
+}
+table, td, th{
+  border: 1px solid black;
+}
+table {
+  border-collapse: collapse;
+  width: 50%;
+}
+thead {
+  background-color: red;
+}
+tbody {
+  background-color: orange;
+}
+tr:first-child{
+  background-color: red;
+}

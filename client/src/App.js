@@ -3,7 +3,6 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import "./App.css";
 import styled from "styled-components";
-import SpreadSheet from "./components/SpreadSheet";
 
 const Wrapper = styled.div`
   display: flex;
@@ -34,49 +33,41 @@ const FormButton = styled.input`
 const FormLabel = styled.label`
   padding: 0;
   margin: 5px 20px;
+  font-size: 1rem;
 `;
 
 const App = () => {
   const [data, setData] = useState([]);
-  const [sheet, setSheet] = useState([]);
-  const [workSheet, setWorkSheet] = useState({});
-  const [isOpen, setIsOpen] = useState(false);
   const [fileError, setFileError] = useState(false);
 
   useEffect(() => {
     callBackendAPI();
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if(fileError){
-      return;
-    }
-    try {
-      const dataSheet = XLSX.utils.sheet_to_json(workSheet);
-      setSheet(dataSheet);
-      if (dataSheet) {
-        setIsOpen(true);
-      }
-    } catch (error) {
-      console.log("error: ", error.message);
-    }
-  };
+  
 
   const readExcel = async (e) => {
-    
+    //check for xlsx extension of a spreadsheet
     const str = e.target.files[0].name;
     const strCheck = "xlsx";
     if (str.indexOf(strCheck) === -1) {
-      setFileError(true)
-      alert("Error: File is not of type xlsx -- refresh page");
+      setFileError(true);
+      alert("Error: File is not of type xlsx");
     } else {
-      const file = e.target.files[0];
-      const data = await file.arrayBuffer();
-      /* data is an ArrayBuffer */
-      const workbook = XLSX.read(data);
-      const worksheetName = workbook.SheetNames[0];
-      setWorkSheet(workbook.Sheets[worksheetName]);
+      //dynamically add html table
+      const fileReader = new FileReader();
+      fileReader.readAsArrayBuffer(e.target.files[0]);
+      fileReader.onload = () => {
+        let dataSht = new Uint8Array(fileReader.result);
+        let wb = XLSX.read(dataSht, { type: "array" });
+        let htmlStr = XLSX.write(wb, {
+          sheet: "Sheet1",
+          type: "binary",
+          bookType: "html",
+        });
+        
+        document.getElementById("wrapper").innerHTML += htmlStr;
+      };
     }
   };
 
@@ -98,21 +89,18 @@ const App = () => {
           <h2>{item.message}</h2>
         </Wrapper>
       ))}
-      <Form onSubmit={handleSubmit}>
+      <Form>
         <FormDiv>
-          <FormLabel htmlFor="myfile">Select a file:</FormLabel>
+          <FormLabel htmlFor="myfile">Select an Excel Spreadsheet: </FormLabel>
           <FormButton
             type="file"
             id="myfile"
             name="myfile"
             onChange={(e) => readExcel(e)}
           ></FormButton>
-          <FormButton type="submit" value="Upload" />
         </FormDiv>
       </Form>
-      <div>
-        <SpreadSheet isOpen={isOpen} sheet={sheet} />
-      </div>
+      <div id="wrapper"></div>
     </>
   );
 };
