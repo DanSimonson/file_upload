@@ -26,7 +26,7 @@ const FormButton = styled.input`
   border: none;
   border-radius: 2%;
   text-decoration: none;
-  color: white;
+  color: #222;
   padding: 20px 20px;
   margin: 5px 20px;
   cursor: pointer;
@@ -37,33 +37,67 @@ const FormLabel = styled.label`
 `;
 
 const App = () => {
+  const [data, setData] = useState([]);
   const [sheet, setSheet] = useState([]);
-  const [workSheet, setWorkSheet] = useState({})
+  const [workSheet, setWorkSheet] = useState({});
+  const [isOpen, setIsOpen] = useState(false);
+  const [fileError, setFileError] = useState(false);
+
+  useEffect(() => {
+    callBackendAPI();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const dataSheet = XLSX.utils.sheet_to_json(workSheet);
-    console.log("dataSheet: ", dataSheet);
-    setSheet(dataSheet);
+    if(fileError){
+      return;
+    }
+    try {
+      const dataSheet = XLSX.utils.sheet_to_json(workSheet);
+      setSheet(dataSheet);
+      if (dataSheet) {
+        setIsOpen(true);
+      }
+    } catch (error) {
+      console.log("error: ", error.message);
+    }
   };
+
   const readExcel = async (e) => {
-    const file = e.target.files[0];
-    console.log('file: ', file);
-    const data = await file.arrayBuffer();
-    /* data is an ArrayBuffer */
-    const workbook = XLSX.read(data);
-    console.log("workbook: ", workbook);
-    const worksheetName = workbook.SheetNames[0];
-    console.log("worksheet: ", worksheetName);
-    //const worksheet = workbook.Sheets[worksheetName];
-    setWorkSheet(workbook.Sheets[worksheetName])
-    // console.log('worksheet: ', worksheet)
-    // const dataSheet = XLSX.utils.sheet_to_json(worksheet);
-    // console.log("dataSheet: ", dataSheet);
-    // setSheet(dataSheet);
+    
+    const str = e.target.files[0].name;
+    const strCheck = "xlsx";
+    if (str.indexOf(strCheck) === -1) {
+      setFileError(true)
+      alert("Error: File is not of type xlsx -- refresh page");
+    } else {
+      const file = e.target.files[0];
+      const data = await file.arrayBuffer();
+      /* data is an ArrayBuffer */
+      const workbook = XLSX.read(data);
+      const worksheetName = workbook.SheetNames[0];
+      setWorkSheet(workbook.Sheets[worksheetName]);
+    }
   };
+
+  const callBackendAPI = async () => {
+    let temp = [];
+    try {
+      const res = await axios("/express_backend");
+      temp.push(res.data);
+      setData(temp);
+    } catch (err) {
+      console.log("err.message: ", err.message);
+    }
+  };
+
   return (
     <>
+      {data.map((item, idx) => (
+        <Wrapper key={idx}>
+          <h2>{item.message}</h2>
+        </Wrapper>
+      ))}
       <Form onSubmit={handleSubmit}>
         <FormDiv>
           <FormLabel htmlFor="myfile">Select a file:</FormLabel>
@@ -76,89 +110,11 @@ const App = () => {
           <FormButton type="submit" value="Upload" />
         </FormDiv>
       </Form>
-      <SpreadSheet sheet={sheet} />
+      <div>
+        <SpreadSheet isOpen={isOpen} sheet={sheet} />
+      </div>
     </>
   );
 };
-
-// const App = () => {
-// const [data, setData] = useState([]);
-// const [file, setFile] = useState("");
-// const [filename, setFilename] = useState("Choose File");
-// const [uploadedFile, setUploadedFile] = useState({});
-// const [message, setMessage] = useState("");
-
-// useEffect(() => {
-//   callBackendAPI();
-// }, []);
-
-// const callBackendAPI = async () => {
-//   let temp = [];
-//   try {
-//     const res = await axios("/express_backend");
-//     temp.push(res.data);
-//     setData(temp);
-//   } catch (err) {
-//     console.log("err.message: ", err.message);
-//   }
-// };
-
-// const handleChange = (e) => {
-//   setFile(e.target.files[0]);
-//   setFilename(e.target.files[0].name);
-// };
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
-//   const formData = new FormData();
-//   formData.append("file", file);
-//   try {
-//     const res = await axios.post("/upload", formData, {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//       },
-//     });
-//     const { fileName, filePath } = res.data;
-
-//     setUploadedFile({ fileName, filePath });
-
-//     setMessage("File Uploaded");
-//   } catch (err) {
-//     console.log("err", err.message);
-//   }
-// };
-
-// return (
-//   <div>
-//     <h1>d</h1>
-//   </div>
-//  <div>
-//   {data.map((item, idx) => (
-//     <Wrapper key={idx}>
-//       <h2>{item.message}</h2>
-//     </Wrapper>
-//   ))}
-//   <Form onSubmit={handleSubmit}>
-//     <FormDiv>
-//       <FormLabel htmlFor="myfile">Select a file:</FormLabel>
-//       <FormButton
-//         type="file"
-//         id="myfile"
-//         name="myfile"
-//         onChange={handleChange}
-//       ></FormButton>
-//       <FormButton type="submit" value="Upload" />
-//     </FormDiv>
-//   </Form>
-//   {uploadedFile ? (
-//     <div>
-//       <div>
-//         <h3>{uploadedFile.fileName}</h3>
-//         <img style={{ width: '100%' }} src={uploadedFile.filePath} alt='' />
-//       </div>
-//     </div>
-//   ) : null}
-// </div>
-//   );
-// };
 
 export default App;
