@@ -5,16 +5,29 @@ import "./App.css";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
+  padding-left: 2rem;
+  margin-top: 10rem;
   display: flex;
   justify-content: center
-  align-items: center
+  align-items: center;
   font-size: 18px;
+  @media (min-width: 755px) and (max-width: 1024px) {
+    padding-left: 3.5rem;
+  }
+  @media (max-width: 426px){
+    padding-left: 2rem;
+  }
 `;
 const Form = styled.form`
   width: 100%;
   display: flex;
   justify-content: center
   align-items: center
+  @media (max-width: 426px) {
+    width:360px;
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
 `;
 const FormDiv = styled.div`
   display: flex;
@@ -44,8 +57,6 @@ const App = () => {
     callBackendAPI();
   }, []);
 
-  
-
   const readExcel = async (e) => {
     //check for xlsx extension of a spreadsheet
     const str = e.target.files[0].name;
@@ -66,7 +77,7 @@ const App = () => {
           type: "binary",
           bookType: "html",
         });
-        
+
         document.getElementById("wrapper").innerHTML += htmlStr;
       };
     }
